@@ -18,79 +18,24 @@ func main() {
 
 	var tasks []Task
 
-	LoadTasks("tasks.json", &tasks)
-
-	operation := args[1]
-	switch operation {
-	case "add":
-		err := checkArgCount(args)
-		if err != nil {
-			printErr(err)
-			os.Exit(1)
-		}
-		input := args[2]
-		tasks = append(tasks, Task{input, false})
-		SaveTasks("tasks.json", tasks)
-
-	case "del":
-		err := checkArgCount(args)
-		if err != nil {
-			printErr(err)
-			os.Exit(1)
-		}
-		index, err := strconv.Atoi(args[2])
-		if err != nil {
-			index = -1
-		}
-		newList, err := DeleteTask(tasks, index-1)
-		if err != nil {
-			printErr(err)
-		} else {
-			tasks = newList
-			SaveTasks("tasks.json", tasks)
-		}
-
-	case "done":
-		err := checkArgCount(args)
-		if err != nil {
-			printErr(err)
-			os.Exit(1)
-		}
-		index, err := strconv.Atoi(args[2])
-		if err != nil {
-			index = -1
-		}
-		newTasks, err := ToggleTask(tasks, index-1)
-		if err != nil {
-			printErr(err)
-		} else {
-			tasks = newTasks
-			SaveTasks("tasks.json", tasks)
-		}
-
-	case "list":
-		err := ListTasks(tasks)
-		if err != nil {
-			printErr(err)
-		}
-
-	case "clear":
-		scanner := bufio.NewScanner(os.Stdin)
-		fmt.Print("Clear task file? (y/N): ")
-		scanner.Scan()
-
-		switch scanner.Text() {
-		case "Y", "y":
-			fmt.Println("Task file cleared")
-			tasks = []Task{}
-			SaveTasks("tasks.json", tasks)
-		default:
-			os.Exit(1)
-		}
-
-	default:
-		printHelp()
+	savePath, err := getSavePath()
+	if err != nil {
+		printErr(err)
+		os.Exit(1)
 	}
+
+	LoadTasks(savePath, &tasks)
+
+	handleOperation(args, &tasks)
+}
+
+func getSavePath() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return homeDir, err
+	}
+
+	return homeDir + "/.task.json", nil
 }
 
 func checkArgCount(args []string) error {
@@ -112,4 +57,98 @@ del <task-id>		delete a task
 done <task-id>		toggle task completion
 list 			list all tasks
 `)
+}
+
+func handleOperation(args []string, tasks *[]Task) {
+	operation := args[1]
+	switch operation {
+	case "add":
+		handleAdd(args, tasks)
+	case "del":
+		handleDelete(args, tasks)
+	case "done":
+		handleToggle(args, tasks)
+	case "clear":
+		handleClear(tasks)
+	case "list":
+		err := ListTasks(*tasks)
+		if err != nil {
+			printErr(err)
+		}
+	default:
+		printHelp()
+	}
+}
+
+func handleAdd(args []string, tasks *[]Task) {
+	err := checkArgCount(args)
+	if err != nil {
+		printErr(err)
+		os.Exit(1)
+	}
+	input := args[2]
+	*tasks = append(*tasks, Task{input, false})
+	saveToFile(tasks)
+}
+
+func handleDelete(args []string, tasks *[]Task) {
+	err := checkArgCount(args)
+	if err != nil {
+		printErr(err)
+		os.Exit(1)
+	}
+	index, err := strconv.Atoi(args[2])
+	if err != nil {
+		index = -1
+	}
+	newList, err := DeleteTask(*tasks, index-1)
+	if err != nil {
+		printErr(err)
+	} else {
+		*tasks = newList
+		saveToFile(tasks)
+	}
+}
+
+func handleToggle(args []string, tasks *[]Task) {
+	err := checkArgCount(args)
+	if err != nil {
+		printErr(err)
+		os.Exit(1)
+	}
+	index, err := strconv.Atoi(args[2])
+	if err != nil {
+		index = -1
+	}
+	newTasks, err := ToggleTask(*tasks, index-1)
+	if err != nil {
+		printErr(err)
+	} else {
+		*tasks = newTasks
+		saveToFile(tasks)
+	}
+}
+
+func handleClear(tasks *[]Task) {
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print("Clear task file? (y/N): ")
+	scanner.Scan()
+
+	switch scanner.Text() {
+	case "Y", "y":
+		fmt.Println("Task file cleared")
+		*tasks = []Task{}
+		saveToFile(tasks)
+	default:
+		os.Exit(1)
+	}
+}
+
+func saveToFile(tasks *[]Task) {
+	savePath, err := getSavePath()
+	if err != nil {
+		printErr(err)
+		os.Exit(1)
+	}
+	SaveTasks(savePath, *tasks)
 }
