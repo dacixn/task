@@ -1,6 +1,6 @@
 # Task
 ## 📝 To-do CLI written in Go
-This applet was made as a beginner project
+This app was made as a beginner project
 
 Tasks are saved to a `tasks.json` file in the app's directory
 
