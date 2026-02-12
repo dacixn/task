@@ -81,7 +81,7 @@ func ListTasks(taskList []Task) error {
 			fmt.Print("[ ] ")
 		}
 
-		fmt.Printf("(%d) %s\n", i+1, task.Text)
+		fmt.Printf("%d. %s\n", i+1, task.Text)
 	}
 
 	return nil
