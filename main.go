@@ -136,7 +136,7 @@ func handleClear(tasks *[]Task) {
 
 	switch scanner.Text() {
 	case "Y", "y":
-		fmt.Println("Task file cleared")
+		fmt.Println("Task file cleared\n")
 		*tasks = []Task{}
 		saveToFile(tasks)
 	default:
