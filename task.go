@@ -22,6 +22,15 @@ func ToggleTask(taskList []Task, index int) ([]Task, error) {
 
 }
 
+func EditTask(taskList []Task, index int, text string) ([]Task, error) {
+	if index >= len(taskList) || index < 0 {
+		return taskList, errors.New("invalid index")
+	}
+
+	taskList[index].Text = text
+	return taskList, nil
+}
+
 func DeleteTask(taskList []Task, index int) ([]Task, error) {
 	if index >= len(taskList) || index < 0 {
 		return taskList, errors.New("invalid index")

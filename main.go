@@ -8,6 +8,17 @@ import (
 	"strconv"
 )
 
+type Operation int
+
+const (
+	ADD = iota
+	EDIT
+	DEL
+	TOGGLE
+	LIST
+	CLEAR
+)
+
 func main() {
 	args := os.Args
 
@@ -25,7 +36,6 @@ func main() {
 	}
 
 	LoadTasks(savePath, &tasks)
-
 	handleOperation(args, &tasks)
 }
 
@@ -38,9 +48,18 @@ func getSavePath() (string, error) {
 	return homeDir + "/.task.json", nil
 }
 
-func checkArgCount(args []string) error {
-	if len(args) < 3 {
-		return errors.New("too few arguments")
+func checkArgCount(args []string, Operation int) error {
+	switch Operation {
+	case ADD, DEL, TOGGLE:
+		if len(args) < 3 {
+			return errors.New("too few arguments")
+		}
+	case EDIT:
+		if len(args) < 4 {
+			return errors.New("too few arguments")
+		}
+	default:
+		return errors.New("invalid operation")
 	}
 
 	return nil
@@ -51,11 +70,16 @@ func printErr(err error) {
 }
 
 func printHelp() {
-	fmt.Printf(`help			show this message
-add "<task-body>"	add a task
-del <task-id>		delete a task
-done <task-id>		toggle task completion
+	fmt.Printf(`
+task <command> [arguments]
+
+help			show this message
+add [text]		add a task
+edit [id, text]		edit a task
+del [id]		delete a task
+done [id]		toggle task completion
 list 			list all tasks
+
 `)
 }
 
@@ -64,6 +88,8 @@ func handleOperation(args []string, tasks *[]Task) {
 	switch operation {
 	case "add":
 		handleAdd(args, tasks)
+	case "edit":
+		handleEdit(args, tasks)
 	case "del":
 		handleDelete(args, tasks)
 	case "done":
@@ -81,7 +107,7 @@ func handleOperation(args []string, tasks *[]Task) {
 }
 
 func handleAdd(args []string, tasks *[]Task) {
-	err := checkArgCount(args)
+	err := checkArgCount(args, ADD)
 	if err != nil {
 		printErr(err)
 		os.Exit(1)
@@ -91,8 +117,25 @@ func handleAdd(args []string, tasks *[]Task) {
 	saveToFile(tasks)
 }
 
+func handleEdit(args []string, tasks *[]Task) {
+	err := checkArgCount(args, EDIT)
+	if err != nil {
+		printErr(err)
+		os.Exit(1)
+	}
+
+	index, err := strconv.Atoi(args[2])
+	text := args[3]
+	*tasks, err = EditTask(*tasks, index-1, text)
+	if err != nil {
+		printErr(err)
+		os.Exit(1)
+	}
+	saveToFile(tasks)
+}
+
 func handleDelete(args []string, tasks *[]Task) {
-	err := checkArgCount(args)
+	err := checkArgCount(args, DEL)
 	if err != nil {
 		printErr(err)
 		os.Exit(1)
@@ -111,7 +154,7 @@ func handleDelete(args []string, tasks *[]Task) {
 }
 
 func handleToggle(args []string, tasks *[]Task) {
-	err := checkArgCount(args)
+	err := checkArgCount(args, TOGGLE)
 	if err != nil {
 		printErr(err)
 		os.Exit(1)
