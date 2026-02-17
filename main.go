@@ -1,5 +1,9 @@
 package main
 
+// 🌟✨ Welcome to the emoji-fied `main.go` ✨🌟
+// This file orchestrates the tiny to-do CLI app — enjoy the emojis!
+// 🚀🐣⚡️🎉🔥💡🛠️📦
+
 import (
 	"bufio"
 	"errors"
@@ -19,23 +23,30 @@ const (
 	CLEAR
 )
 
+// main is the entrypoint for the CLI 🏁
+// Usage: `task <command> [arguments]` 🧭
 func main() {
 	args := os.Args
 
 	if len(args) <= 1 {
-		printHelp()
-		os.Exit(1)
+		// No args -> show help 🤔📘
+		printHelp() // 📚
+		os.Exit(1) // ❌
 	}
 
-	var tasks []Task
+	// load tasks into memory 🧠📥
+	var tasks []Task // 🗂️ list of tasks
 
-	savePath, err := getSavePath()
+	savePath, err := getSavePath() // 🔍 find save location
 	if err != nil {
-		printErr(err)
+		printErr(err) // 🆘 show error
 		os.Exit(1)
 	}
 
+	// Load previously saved tasks from disk 📂➡️🧠
 	LoadTasks(savePath, &tasks)
+
+	// Dispatch the requested operation (add/edit/list/etc.) 🏷️
 	handleOperation(args, &tasks)
 }
 
@@ -45,20 +56,24 @@ func getSavePath() (string, error) {
 		return homeDir, err
 	}
 
-	return homeDir + "/.task.json", nil
+	// default save file is in user's home directory 🏠
+	return homeDir + "/.task.json", nil // 💾
 }
 
 func checkArgCount(args []string, op Operation) error {
 	switch op {
 	case ADD, DEL, TOGGLE:
 		if len(args) < 3 {
+			// not enough args for add/del/toggle 😅
 			return errors.New("too few arguments")
 		}
 	case EDIT:
 		if len(args) < 4 {
+			// edit needs id + new text ✍️
 			return errors.New("too few arguments")
 		}
 	default:
+		// unknown operation 🧨
 		return errors.New("invalid operation")
 	}
 
@@ -66,21 +81,23 @@ func checkArgCount(args []string, op Operation) error {
 }
 
 func printErr(err error) {
+	// print errors in a friendly format ⚠️
 	fmt.Printf("Error: %s\n", err)
 }
 
 func printHelp() {
+	// help text with emoji hints 🆘
 	fmt.Printf(`
 task <command> [arguments]
 
-help			show this message
-add [text]		add a task
-edit <id> <text>	edit a task
-del [id]		delete a task
-done [id]		toggle task completion
-list 			list all tasks
+help			show this message 📖❓
+add [text]		add a task ➕📝
+edit <id> <text>	edit a task ✏️
+del [id]		delete a task 🗑️
+done [id]		toggle task completion ✅/⬜️
+list 			list all tasks 📜
 
-`)
+`) // 🎯
 }
 
 func handleOperation(args []string, tasks *[]Task) {
@@ -102,6 +119,7 @@ func handleOperation(args []string, tasks *[]Task) {
 			printErr(err)
 		}
 	default:
+		// unknown command -> show help 🤷‍♀️
 		printHelp()
 	}
 }
@@ -113,8 +131,9 @@ func handleAdd(args []string, tasks *[]Task) {
 		os.Exit(1)
 	}
 	input := args[2]
+	// append new task (not done by default) ➕
 	*tasks = append(*tasks, Task{input, false})
-	saveToFile(tasks)
+	saveToFile(tasks) // persist to disk 💾
 }
 
 func handleEdit(args []string, tasks *[]Task) {
@@ -135,6 +154,7 @@ func handleEdit(args []string, tasks *[]Task) {
 		printErr(err)
 		os.Exit(1)
 	}
+	// save after editing ✨
 	saveToFile(tasks)
 }
 
@@ -153,6 +173,7 @@ func handleDelete(args []string, tasks *[]Task) {
 		printErr(err)
 	} else {
 		*tasks = newList
+		// persist deletion 🧹
 		saveToFile(tasks)
 	}
 }
@@ -172,17 +193,20 @@ func handleToggle(args []string, tasks *[]Task) {
 		printErr(err)
 	} else {
 		*tasks = newTasks
+		// toggle complete/incomplete 🔁
 		saveToFile(tasks)
 	}
 }
 
 func handleClear(tasks *[]Task) {
 	scanner := bufio.NewScanner(os.Stdin)
+	// confirm destructive action 🛑
 	fmt.Print("Clear task file? (y/N): ")
 	scanner.Scan()
 
 	switch scanner.Text() {
 	case "Y", "y":
+		// user confirmed -> clear list 🧽
 		fmt.Println("Task file cleared")
 		*tasks = []Task{}
 		saveToFile(tasks)
@@ -197,5 +221,6 @@ func saveToFile(tasks *[]Task) {
 		printErr(err)
 		os.Exit(1)
 	}
+	// write tasks to JSON file on disk 📝➡️💾
 	SaveTasks(savePath, *tasks)
 }
